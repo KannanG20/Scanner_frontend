@@ -26,7 +26,7 @@ function Auth() {
             }),
         }
         try {
-            const res= await fetch('http://localhost:3000/login', options)
+            const res= await fetch(`${import.meta.env.VITE_API}/login`, options)
             const responseData = await res.json()
             console.log(responseData)
             if (!res.ok){

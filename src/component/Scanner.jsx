@@ -14,7 +14,7 @@ const Scanner = (props) => {
   useEffect(()=> {
     const fetchData = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/qrcodes?userId=${user_info.id}`)
+            const res = await fetch(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`)
             const Resdata = await res.json()
             setStoredData(Resdata)
             console.log('data', Resdata)
@@ -36,7 +36,7 @@ const Scanner = (props) => {
                     data: data,
                 }),
             }
-            const res = await fetch(`http://localhost:3000/qrcodes?userId=${user_info.id}`, options)
+            const res = await fetch(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`, options)
             const responseData = await res.json()
             if (!res.ok){
                 enqueueSnackbar(responseData?.error?? 'Something went wrong', {
