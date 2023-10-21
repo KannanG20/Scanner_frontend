@@ -115,7 +115,7 @@ const Scanner = (props) => {
             </div>
             }
             {on && <div className='p-2 w-full md:max-w-sm rounded bg-white '>
-                <span className='w-max'>{data?? 'NO DATA CAPTURED'}</span> 
+                <p className='w-full'>{data?? 'NO DATA CAPTURED'}</p> 
             </div>}
             {data && <div className='flex w-full md:max-w-sm justify-end items-end mt-3'>
                 <button onClick={()=> handleSaveData()} disabled={disable} className='py-2 px-3 disabled:bg-gray-500 bg-blue-500 text-white rounded-md w-full'>Save</button>
