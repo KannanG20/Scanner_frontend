@@ -2,6 +2,7 @@ import { SnackbarContent, SnackbarProvider, enqueueSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import {QrReader} from 'react-qr-reader'; // Corrected import
 import { useNavigate } from 'react-router-dom';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 const Scanner = (props) => {
   const [data, setData] = useState(null);
@@ -9,6 +10,8 @@ const Scanner = (props) => {
   const [on, setOn] = useState(false)
   const [update, setUpdate] = useState(false)
   const [deviceSize, setDeviceSize] = useState()
+  const [disable, setDisable] = useState(false)
+
 
   const user_info = JSON.parse(localStorage.getItem('user_info'));
   const navigate = useNavigate()
@@ -37,7 +40,6 @@ const Scanner = (props) => {
             const res = await fetch(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`)
             const Resdata = await res.json()
             setStoredData(Resdata)
-            console.log('data', Resdata)
         } catch (error) {
             console.log(error)
         }
@@ -56,6 +58,7 @@ const Scanner = (props) => {
                     data: data,
                 }),
             }
+            setDisable(true)
             const res = await fetch(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`, options)
             const responseData = await res.json()
             if (!res.ok){
@@ -71,6 +74,45 @@ const Scanner = (props) => {
                     autoHideDuration: 3000
                 })
             }
+           setDisable(false)
+        } catch (error) {
+            console.log(error)
+            enqueueSnackbar('Something went wrong', {
+                variant: 'error',
+                autoHideDuration: 3000
+            })
+            setDisable(false)
+        }
+    }
+
+    const handleLogout = () => {
+        localStorage.clear('user_info')
+        navigate('/login')
+    }
+
+    const handleDeleteData = async (data) => {
+        try {
+            const options = {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+            const res = await fetch(`${import.meta.env.VITE_API}/qrcodes/${data.id}`, options)
+            const responseData = await res.json()
+            if (!res.ok){
+                enqueueSnackbar(responseData?.error?? 'Something went wrong', {
+                    variant: 'error',
+                    autoHideDuration: 3000
+                })
+            }else {
+                setData(null)
+                setUpdate(prev=>!prev)
+                enqueueSnackbar('Successfully deleted the data', {
+                    variant: 'success',
+                    autoHideDuration: 3000
+                })
+            }
            
         } catch (error) {
             console.log(error)
@@ -79,11 +121,6 @@ const Scanner = (props) => {
                 autoHideDuration: 3000
             })
         }
-    }
-
-    const handleLogout = () => {
-        localStorage.clear('user_info')
-        navigate('/login')
     }
   
   return (
@@ -120,7 +157,7 @@ const Scanner = (props) => {
                 <span className='w-max'>{data?? 'NO DATA CAPTURED'}</span> 
             </div>}
             {data && <div className='flex w-full md:max-w-sm justify-end items-end mt-3'>
-                <button onClick={()=> handleSaveData()} className='py-2 px-3 bg-blue-500 text-white rounded-md w-full'>Save</button>
+                <button onClick={()=> handleSaveData()} disabled={disable} className='py-2 px-3 disabled:bg-gray-500 bg-blue-500 text-white rounded-md w-full'>Save</button>
             </div>}
         </div>
         <div className='md:flex-1 w-full md:mr-5 bg-white rounded  max-h-72 relative overflow-y-auto'>
@@ -129,7 +166,12 @@ const Scanner = (props) => {
             {storedData?.data?.length > 0 ? 
             <>
             {storedData?.data?.map((item)=> (
-                <p>{item?.code}</p>
+                <div className=' w-full flex '>
+                <p className='flex-1'>{item?.code}</p>
+                <div className='flex justify-end text-red-500'>
+                    <TrashIcon onClick={() => handleDeleteData(item)} className='h-5 w-5'/>
+                </div>
+                </div>
             ))}
             </>
             : <span className='flex justify-center items-center'>NO DATA</span>
