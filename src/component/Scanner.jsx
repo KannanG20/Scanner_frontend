@@ -88,7 +88,7 @@ const Scanner = (props) => {
                         console.info('error', error);
                     }
                     }}
-                    // style={{ width: '300px', height: '100px' }}
+                    constraints={{ facingMode: 'environment' }}                    // style={{ width: '300px', height: '100px' }}
                     className='w-full h-full'
                 />
             </div>
