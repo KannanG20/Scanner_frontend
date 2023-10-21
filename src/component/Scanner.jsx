@@ -8,9 +8,29 @@ const Scanner = (props) => {
   const [storedData, setStoredData] = useState([])
   const [on, setOn] = useState(false)
   const [update, setUpdate] = useState(false)
-  const user_info = JSON.parse(localStorage.getItem('user_info'));
+  const [deviceSize, setDeviceSize] = useState()
 
+  const user_info = JSON.parse(localStorage.getItem('user_info'));
   const navigate = useNavigate()
+
+  useEffect(() => {
+    function updateDeviceSize() {
+      const windowWidth = window.innerWidth;
+      if (windowWidth < 767) {
+        setDeviceSize('small');
+      } else if (windowWidth >= 768 && windowWidth < 1024) {
+        setDeviceSize('tablet');
+      } else {
+        setDeviceSize('large');
+      }
+    }
+      updateDeviceSize();
+      window.addEventListener('resize', updateDeviceSize);
+      return () => {
+      window.removeEventListener('resize', updateDeviceSize);
+    };
+  }, []);
+
   useEffect(()=> {
     const fetchData = async () => {
         try {
@@ -88,7 +108,10 @@ const Scanner = (props) => {
                         console.info('error', error);
                     }
                     }}
-                    constraints={{ facingMode: 'environment' }}                    // style={{ width: '300px', height: '100px' }}
+
+                    constraints={{ facingMode: deviceSize === 'small' ? 'environment' : 'user' }}
+
+                    // style={{ width: '300px', height: '100px' }}
                     className='w-full h-full'
                 />
             </div>
