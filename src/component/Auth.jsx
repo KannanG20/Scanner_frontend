@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { enqueueSnackbar } from 'notistack'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -10,35 +11,21 @@ function Auth() {
 
     const navigate = useNavigate()
 
-    const handleSubmit = async (e)=> {
+    const handleSubmit = (e)=> {
         e.preventDefault()
         const data = {
             username: username,
             password: password
         }
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: data.username,
-                password: data.password
-            }),
-        }
-        try {
-            setDisable(true)
-            const res= await fetch(`${import.meta.env.VITE_API}/login`, options)
-            const responseData = await res.json()
-            console.log(responseData)
-            if (!res.ok){
-            return setErr(responseData?.error)
-            }
+        setErr(null)
+        setDisable(true)
+        axios.post(`${import.meta.env.VITE_API}/login`, data)
+        .then((res)=> {
             const localData = {
                 isAuth: true,
-                id: responseData?.data?.id,
-                username: responseData?.data?.username,
-                token: responseData?.token
+                id: res?.data?.data?.id,
+                username: res?.data?.data?.username,
+                token: res?.data?.token
             }
             localStorage.setItem('user_info', JSON.stringify(localData));
             navigate('/')
@@ -46,14 +33,16 @@ function Auth() {
                 variant: 'success',
                 autoHideDuration: 3000
             })
-            setDisable(false)
-        } catch (error) {
-            enqueueSnackbar('Something went wrong', {
-                variant: 'error',
-                autoHideDuration: 3000
-            })
-            setDisable(false)
-        }
+        }).catch((err)=> {
+            if (err.response.status === 401){
+                setErr(err.response.data.error)
+            }else{
+                enqueueSnackbar(err.response.data.error?? 'Something went wrong', {
+                    variant: 'error',
+                    autoHideDuration: 3000
+                })
+            }
+        }).finally(()=> setDisable(false))
     }
 
   return (

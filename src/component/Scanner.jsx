@@ -1,17 +1,18 @@
 import { SnackbarContent, SnackbarProvider, enqueueSnackbar } from 'notistack';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {QrReader} from 'react-qr-reader'; // Corrected import
 import { useNavigate } from 'react-router-dom';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { AuthContext } from '../context/AuthContext';
+import axios from 'axios';
 
 const Scanner = (props) => {
   const [data, setData] = useState(null);
-  const [storedData, setStoredData] = useState([])
   const [on, setOn] = useState(false)
-  const [update, setUpdate] = useState(false)
   const [deviceSize, setDeviceSize] = useState()
   const [disable, setDisable] = useState(false)
 
+  const { storedData, setUpdate } = useContext(AuthContext)
 
   const user_info = JSON.parse(localStorage.getItem('user_info'));
   const navigate = useNavigate()
@@ -34,55 +35,30 @@ const Scanner = (props) => {
     };
   }, []);
 
-  useEffect(()=> {
-    const fetchData = async () => {
-        try {
-            const res = await fetch(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`)
-            const Resdata = await res.json()
-            setStoredData(Resdata)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-        fetchData()
-  }, [update])
 
-  const handleSaveData = async () => {
-        try {
-            const options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    data: data,
-                }),
-            }
-            setDisable(true)
-            const res = await fetch(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`, options)
-            const responseData = await res.json()
-            if (!res.ok){
-                enqueueSnackbar(responseData?.error?? 'Something went wrong', {
-                    variant: 'error',
-                    autoHideDuration: 3000
-                })
-            }else {
-                setData(null)
-                setUpdate(prev=>!prev)
-                enqueueSnackbar('Successfully saved the data', {
-                    variant: 'success',
-                    autoHideDuration: 3000
-                })
-            }
-           setDisable(false)
-        } catch (error) {
-            console.log(error)
-            enqueueSnackbar('Something went wrong', {
-                variant: 'error',
-                autoHideDuration: 3000
-            })
-            setDisable(false)
+    const handleSaveData = async () => {
+        const options = {
+            data: data
         }
+        setDisable(true);
+        axios.post(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`, options)
+        .then(res => {
+            setData(null);
+            setUpdate(prev => !prev);
+            enqueueSnackbar('Successfully saved the data', {
+                variant: 'success',
+                autoHideDuration: 3000
+            });
+        })
+        .catch(error => {
+            console.log(error);
+            enqueueSnackbar('Something went wrong', {
+            variant: 'error',
+            autoHideDuration: 3000
+            });
+        }).finally(()=> {
+            setDisable(false)
+        });
     }
 
     const handleLogout = () => {
@@ -91,36 +67,21 @@ const Scanner = (props) => {
     }
 
     const handleDeleteData = async (data) => {
-        try {
-            const options = {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
-            const res = await fetch(`${import.meta.env.VITE_API}/qrcodes/${data.id}`, options)
-            const responseData = await res.json()
-            if (!res.ok){
-                enqueueSnackbar(responseData?.error?? 'Something went wrong', {
-                    variant: 'error',
-                    autoHideDuration: 3000
-                })
-            }else {
-                setData(null)
-                setUpdate(prev=>!prev)
-                enqueueSnackbar('Successfully deleted the data', {
-                    variant: 'success',
-                    autoHideDuration: 3000
-                })
-            }
-           
-        } catch (error) {
+        axios.delete(`${import.meta.env.VITE_API}/qrcodes/${data.id}`)
+        .then((res)=> {
+            setData(null)
+            setUpdate(prev=>!prev)
+            enqueueSnackbar('Successfully deleted the data', {
+                variant: 'success',
+                autoHideDuration: 3000
+            })
+        }).catch((err)=> {
             console.log(error)
             enqueueSnackbar('Something went wrong', {
                 variant: 'error',
                 autoHideDuration: 3000
             })
-        }
+        })
     }
   
   return (
@@ -166,7 +127,7 @@ const Scanner = (props) => {
             {storedData?.data?.length > 0 ? 
             <>
             {storedData?.data?.map((item)=> (
-                <div className=' w-full flex '>
+                <div key={item.id} className=' w-full flex '>
                 <p className='flex-1'>{item?.code}</p>
                 <div className='flex justify-end text-red-500'>
                     <TrashIcon onClick={() => handleDeleteData(item)} className='h-5 w-5'/>

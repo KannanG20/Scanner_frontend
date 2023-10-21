@@ -1,11 +1,30 @@
-import React, { createContext, useEffect } from 'react'
+import axios from 'axios';
+import React, { createContext, useEffect, useState } from 'react'
 
-const AuthContext = createContext()
+export const AuthContext = createContext()
 
-function AuthContextProvider() {
+function AuthContextProvider({ children }) {
 
+  const [storedData, setStoredData] = useState([])
+  const [update, setUpdate] = useState(false)
+  const user_info = JSON.parse(localStorage.getItem('user_info'));
+
+  
+  useEffect(()=> {
+    if (user_info){
+      axios.get(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`)
+      .then((res)=> {
+        setStoredData(res?.data)
+        console.log(res?.data)
+      }).catch((err)=> {
+        console.log(err)
+      })
+    }
+  }, [update])
   return (
-    <div>AuthContext</div>
+    <AuthContext.Provider value={{ storedData, update, setUpdate }}>
+      {children}
+    </AuthContext.Provider> 
   )
 }
 
