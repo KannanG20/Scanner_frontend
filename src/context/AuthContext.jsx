@@ -9,13 +9,11 @@ function AuthContextProvider({ children }) {
   const [update, setUpdate] = useState(false)
   const user_info = JSON.parse(localStorage.getItem('user_info'));
 
-  
   useEffect(()=> {
-    if (user_info){
+    if (user_info.id){
       axios.get(`${import.meta.env.VITE_API}/qrcodes?userId=${user_info.id}`)
       .then((res)=> {
         setStoredData(res?.data)
-        console.log(res?.data)
       }).catch((err)=> {
         console.log(err)
       })

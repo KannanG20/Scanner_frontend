@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { enqueueSnackbar } from 'notistack'
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
 
 function Auth() {
     const [username, setUsername] = useState(null)
@@ -10,6 +11,8 @@ function Auth() {
     const [disable, setDisable] = useState(false)
 
     const navigate = useNavigate()
+
+    const { setUpdate } = useContext(AuthContext)
 
     const handleSubmit = (e)=> {
         e.preventDefault()
@@ -28,6 +31,7 @@ function Auth() {
                 token: res?.data?.token
             }
             localStorage.setItem('user_info', JSON.stringify(localData));
+            setUpdate(prev=>!prev)
             navigate('/')
             enqueueSnackbar('Successfully logged in', {
                 variant: 'success',
